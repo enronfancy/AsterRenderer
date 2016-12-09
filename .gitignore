@@ -1,3 +1,5 @@
 /Debug
 Debug
 /AsterRenderer.VC.db
+/AsterRenderer.VC.opendb
+*.sdf
