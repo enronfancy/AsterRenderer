@@ -31,5 +31,11 @@
     <ClInclude Include="definitions.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="matrix4.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

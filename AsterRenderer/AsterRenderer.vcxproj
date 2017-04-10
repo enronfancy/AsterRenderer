@@ -154,6 +154,8 @@
   <ItemGroup>
     <ClInclude Include="definitions.h" />
     <ClInclude Include="device.h" />
+    <ClInclude Include="matrix4.h" />
+    <ClInclude Include="vector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
