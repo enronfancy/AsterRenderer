@@ -88,7 +88,7 @@ public:
 
 	static matrix4 fromTranslation(vector4 v)
 	{
-		auto result = matrix4().identity();
+		auto result = matrix4::identity();
 		result.m[0][3] = v.x;
 		result.m[1][3] = v.y;
 		result.m[2][3] = v.z;
@@ -97,7 +97,7 @@ public:
 
 	static matrix4 fromRotationX(float angle)
 	{
-		auto result = matrix4().identity();
+		auto result = matrix4::identity();
 		result.m[1][1] = cos(angle);
 		result.m[1][2] = -sin(angle);
 		result.m[2][1] = sin(angle);
@@ -107,7 +107,7 @@ public:
 
 	static matrix4 fromRotationY(float angle)
 	{
-		auto result = matrix4().identity();
+		auto result = matrix4::identity();
 		result.m[0][0] = cos(angle);
 		result.m[0][2] = sin(angle);
 		result.m[2][0] = -sin(angle);
@@ -117,7 +117,7 @@ public:
 
 	static matrix4 fromRotationZ(float angle)
 	{
-		auto result = matrix4().identity();
+		auto result = matrix4::identity();
 		result.m[0][0] = cos(angle);
 		result.m[0][1] = -sin(angle);
 		result.m[1][0] = sin(angle);
@@ -130,9 +130,9 @@ public:
 	}
 
 	void set(float v0,float v1,float v2,float v3,
-			 float v4,float v5,float v6,float v7,
-			 float v8,float v9,float v10,float v11,
-			 float v12,float v13, float v14, float v15)
+		float v4,float v5,float v6,float v7,
+		float v8,float v9,float v10,float v11,
+		float v12,float v13, float v14, float v15)
 	{
 		m[0][0] = v0;   m[0][1] = v1; m[0][2] = v2; m[0][3] = v3;
 		m[1][0] = v4;   m[1][1] = v5; m[1][2] = v6; m[1][3] = v7;
@@ -201,7 +201,7 @@ public:
 
 	matrix4 mul(matrix4& other)
 	{
-		auto result = matrix4().identity();
+		auto result = matrix4::identity();
 		for(auto i = 0; i < 4; ++i)
 		{
 			for(auto j = 0; j < 4; ++j)
@@ -245,11 +245,11 @@ public:
 		}
 
 		auto remainMatDet = remainMat[0]* remainMat[4] *  remainMat[8]
-						  + remainMat[2]* remainMat[3] *  remainMat[7]
-						  + remainMat[6]* remainMat[1] *  remainMat[5]
-						  - remainMat[2]* remainMat[4] *  remainMat[6]
-						  - remainMat[0]* remainMat[5] *  remainMat[7]
-						  - remainMat[8]* remainMat[3] *  remainMat[1];
+		+ remainMat[2]* remainMat[3] *  remainMat[7]
+		+ remainMat[6]* remainMat[1] *  remainMat[5]
+		- remainMat[2]* remainMat[4] *  remainMat[6]
+		- remainMat[0]* remainMat[5] *  remainMat[7]
+		- remainMat[8]* remainMat[3] *  remainMat[1];
 
 		return sign * remainMatDet;
 	}
@@ -294,19 +294,19 @@ public:
 		auto w = at.sub(eye).normalize().neg();
 		auto u = up.cross(w).normalize();
 		auto v = w.cross(u);
-			
+
 		return matrix4().fromCols(u,v, w, eye).invert();
 	}
 
 	static matrix4 viewport(float nx, float ny, float near, float far)
 	{
-		auto result = matrix4().identity();
-		
+		auto result = matrix4::identity();
+
 		result.set( nx / 2.0f, 0, 0, (nx - 1.0f) / 2.0f,
-					0, ny / 2.0f, 0, (ny - 1.0f) / 2.0f,
-					0, 0, (far - near) / 2.0f, (far + near) / 2.0f,
-					0, 0, 0, 1.0f
-				  );
+			0, ny / 2.0f, 0, (ny - 1.0f) / 2.0f,
+			0, 0, (far - near) / 2.0f, (far + near) / 2.0f,
+			0, 0, 0, 1.0f
+			);
 		return result;
 	}
 
@@ -315,7 +315,7 @@ public:
 		auto f = 1.0f / tan(fovy / 2.0f);
 		auto nf = 1 / (near - far);
 
-		auto result = matrix4().identity();
+		auto result = matrix4::identity();
 		result.set(
 			f / aspect, 0, 0, 0,
 			0, f, 0, 0,
