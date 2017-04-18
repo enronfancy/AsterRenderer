@@ -41,7 +41,7 @@ public:
 		return vector4(-v[0],-v[1],-v[2],-v[3]);
 	}
 
-	std::string str()
+	string str()
 	{
 
 		std::ostringstream ostr;
@@ -136,4 +136,45 @@ public:
 		return abs(v) < epsilon;
 	}
 
+
+	void set_x(float value)
+	{
+ 		v[0] = value;
+	}
+
+	float get_x(){
+		return v[0];
+	}
+
+	void set_y(float value)
+	{
+		v[1] = value;
+	}
+
+	float get_y(){
+		return v[1];
+	}
+
+	void set_z(float value)
+	{
+		v[2] = value;
+	}
+
+	float get_z(){
+		return v[2];
+	}
+
+	void set_w(float value)
+	{
+		v[3] = value;
+	}
+
+	float get_w(){
+		return v[3];
+	}
+
+	__declspec( property( get = get_x, put = set_x ) )  float x; 
+	__declspec( property( get = get_y, put = set_y ) )  float y; 
+	__declspec( property( get = get_z, put = set_z ) )  float z; 
+	__declspec( property( get = get_w, put = set_w ) )  float w; 
 };

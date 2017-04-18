@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <string>
+#include <array>
 #include "vector.h"
 using namespace std;
 
@@ -128,6 +129,17 @@ public:
 		m[row][col] = value;
 	}
 
+	void set(float v0,float v1,float v2,float v3,
+			 float v4,float v5,float v6,float v7,
+			 float v8,float v9,float v10,float v11,
+			 float v12,float v13, float v14, float v15)
+	{
+		m[0][0] = v0;   m[0][1] = v1; m[0][2] = v2; m[0][3] = v3;
+		m[1][0] = v4;   m[1][1] = v5; m[1][2] = v6; m[1][3] = v7;
+		m[2][0] = v8;   m[2][1] = v9; m[2][2] = v10; m[2][3] = v11;
+		m[3][0] = v12;   m[3][1] = v13; m[3][2] = v14; m[3][3] = v15;
+	}
+
 	float get(int row, int col)
 	{
 		return m[row][col];
@@ -150,7 +162,7 @@ public:
 		{
 			for(int j = 0; j < 4; j++)
 			{
-				result.m[i][j] = m[j][i];
+				result.m[i][j] = -m[i][j];
 			}
 		}
 		return result;
@@ -187,6 +199,19 @@ public:
 		return result;
 	}
 
+	matrix4 mul(matrix4& other)
+	{
+		auto result = matrix4().identity();
+		for(auto i = 0; i < 4; ++i)
+		{
+			for(auto j = 0; j < 4; ++j)
+			{
+				result.set(i, j, getRow(i).dot(other.getCol(j)));
+			}
+		}
+		return result;
+	}
+
 	matrix4 scale(float s)
 	{
 		auto result = matrix4();
@@ -203,28 +228,28 @@ public:
 	float cofactor(int row, int col)
 	{
 		auto sign = (row + col) % 2 == 0 ? 1 : -1;
-		float remainMat[3][3];
+		auto remainMat = array<float, 9>();
 
 		for(auto i = 0, srcRow = 0; i < 3; ++srcRow)
 		{
 			if(srcRow == row) continue;
 
-			for(auto j = 0, srcCol = 0; j < 4; ++srcCol)
+			for(auto j = 0, srcCol = 0; j < 3; ++srcCol)
 			{
 				if(srcCol == col) continue;
 
-				remainMat[i][j] = get(srcRow, srcRow);
+				remainMat[i*3 + j] = get(srcRow, srcCol);
 				++j;
 			}
 			++i;
 		}
 
-		auto remainMatDet = remainMat[0][0] * remainMat[1][1] *  remainMat[2][2]
-						  + remainMat[0][2] * remainMat[1][0] *  remainMat[2][1]
-						  + remainMat[0][1] * remainMat[1][2] *  remainMat[2][0]
-						  - remainMat[0][2] * remainMat[1][1] *  remainMat[2][0]
-						  - remainMat[0][0] * remainMat[1][2] *  remainMat[2][1]
-						  - remainMat[0][1] * remainMat[1][0] *  remainMat[2][2];
+		auto remainMatDet = remainMat[0]* remainMat[4] *  remainMat[8]
+						  + remainMat[2]* remainMat[3] *  remainMat[7]
+						  + remainMat[6]* remainMat[1] *  remainMat[5]
+						  - remainMat[2]* remainMat[4] *  remainMat[6]
+						  - remainMat[0]* remainMat[5] *  remainMat[7]
+						  - remainMat[8]* remainMat[3] *  remainMat[1];
 
 		return sign * remainMatDet;
 	}
@@ -232,9 +257,9 @@ public:
 	float det()
 	{
 		auto result = 0.0f;
-		for(int i = 0; i <4; i ++)
+		for(auto i = 0; i < 4; ++i)
 		{
-			result += get(i, 0) * cofactor(i, 0);
+			result += this->get(i, 0) * cofactor(i, 0);
 		}
 		return result;
 	}
@@ -251,19 +276,16 @@ public:
 			}
 		}
 		auto cofactorMatrix = result.tranpose();
-		return cofactorMatrix.scale( 1.0f / result.det());
+		return cofactorMatrix.scale( 1.0f / this->det());
 	}
-
-
 
 	string str()
 	{
 		std::ostringstream ostr;
-		ostr << "matrix4:\n[";
-		ostr <<m[0][0] <<","<< m[0][1] <<","<< m[0][2] <<","<< m[0][3] << "\n ";
-		ostr <<m[1][0] <<","<< m[1][1] <<","<< m[1][2] <<","<< m[1][3] << "\n ";
-		ostr <<m[2][0] <<","<< m[2][1] <<","<< m[2][2] <<","<< m[2][3] << "\n ";
-		ostr <<m[3][0] <<","<< m[3][1] <<","<< m[3][2] <<","<< m[3][3] << "]\n";
+		ostr << "matrix4:[" << m[0][0] <<"\t"<< m[0][1] <<"\t"<< m[0][2] <<"\t"<< m[0][3] << "\n ";
+		ostr << "        " << m[1][0] <<"\t"<< m[1][1] <<"\t"<< m[1][2] <<"\t"<< m[1][3] << "\n ";
+		ostr << "        " << m[2][0] <<"\t"<< m[2][1] <<"\t"<< m[2][2] <<"\t"<< m[2][3] << "\n ";
+		ostr << "        " << m[3][0] <<"\t"<< m[3][1] <<"\t"<< m[3][2] <<"\t"<< m[3][3] << "]\n";
 		return ostr.str();
 	}
 
@@ -276,5 +298,42 @@ public:
 		return matrix4().fromCols(u,v, w, eye).invert();
 	}
 
+	static matrix4 viewport(float nx, float ny, float near, float far)
+	{
+		auto result = matrix4().identity();
+		
+		result.set( nx / 2.0f, 0, 0, (nx - 1.0f) / 2.0f,
+					0, ny / 2.0f, 0, (ny - 1.0f) / 2.0f,
+					0, 0, (far - near) / 2.0f, (far + near) / 2.0f,
+					0, 0, 0, 1.0f
+				  );
+		return result;
+	}
+
+	static matrix4 perspective(float fovy, float aspect, float near, float far)
+	{
+		auto f = 1.0f / tan(fovy / 2.0f);
+		auto nf = 1 / (near - far);
+
+		auto result = matrix4().identity();
+		result.set(
+			f / aspect, 0, 0, 0,
+			0, f, 0, 0,
+			0, 0, (far + near) * nf, (2.0f * far * near) * nf,
+			0, 0, -1.0f, 0
+			);
+		return result;
+	}
+
+	vector4 transform(vector4 v)
+	{
+		auto result = vector4();
+
+		for(auto i = 0; i < 4; ++i)
+		{
+			result.v[i] = result.dot(this->getRow(i));
+		}
+		return result;
+	}
 
 };
