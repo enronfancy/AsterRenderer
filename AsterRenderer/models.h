@@ -3,13 +3,17 @@
 #include <array>
 #include <memory>
 
-
-class modelTriangle
+class model
 {
 public:
 	std::array<int, 3> format;
+};
+
+class modelTriangle:public model
+{
+public:
 	std::array<float, 24> vertices;
-	
+
 	modelTriangle()
 	{
 		std::array<int, 3> f = {3,3,2};
@@ -27,10 +31,9 @@ public:
 
 };
 
-class modelCube
+class modelCube:public model
 {
 public:
-	std::array<int, 3> format;
 	std::array<float, 288> vertices;
 
 	modelCube()

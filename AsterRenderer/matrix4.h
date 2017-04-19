@@ -52,6 +52,19 @@ public:
 		}
 	}
 
+	matrix4 clone()
+	{
+		auto other = matrix4();
+		for(int i = 0; i <4; i ++)
+		{
+			for(int j = 0; j < 4; j++)
+			{
+				other.m[i][j] = m[i][j];
+			}
+		}
+		return other;
+	}
+
 	static matrix4 identity()
 	{
 		return matrix4(1.0f);
@@ -289,13 +302,13 @@ public:
 		return ostr.str();
 	}
 
-	static matrix4 lookAt(vector4 eye, vector4 at, vector4 up)
+	static matrix4 lookAt(vector4& eye, vector4& at, vector4& up)
 	{
 		auto w = at.sub(eye).normalize().neg();
 		auto u = up.cross(w).normalize();
 		auto v = w.cross(u);
 
-		return matrix4().fromCols(u,v, w, eye).invert();
+		return matrix4::fromCols(u,v, w, eye).invert();
 	}
 
 	static matrix4 viewport(float nx, float ny, float near, float far)
@@ -325,13 +338,13 @@ public:
 		return result;
 	}
 
-	vector4 transform(vector4 v)
+	vector4 transform(vector4& v)
 	{
 		auto result = vector4();
 
 		for(auto i = 0; i < 4; ++i)
 		{
-			result.v[i] = result.dot(this->getRow(i));
+			result.v[i] = v.dot(this->getRow(i));
 		}
 		return result;
 	}

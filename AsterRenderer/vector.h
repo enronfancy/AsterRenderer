@@ -3,7 +3,6 @@
 #include <math.h>
 #include <string>
 #include <sstream>
-#include <math.h>
 using namespace std;
 
 class vector4
@@ -120,10 +119,10 @@ public:
 		if(!this->equalZero(l))
 		{
 			return vector4(
-				this->v[0] /= l,
-				this->v[1] /= l,
-				this->v[2] /= l,
-				this->v[3] /= l
+				this->v[0] / l,
+				this->v[1] / l,
+				this->v[2] / l,
+				this->v[3] / l
 				);
 		}
 		else 
