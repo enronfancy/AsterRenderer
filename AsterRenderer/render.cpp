@@ -2,36 +2,19 @@
 #include <math.h>
 #include "utility.h"
 #include <iostream>
-
-#define PI 3.1415927
-
-void renderState::clearFrameBuffer()
-{
-	for(auto i = 0; i < width * height * 3; ++i)
-	{
-		this->frameBuffer[i] = 0;
-	}
-}
-
-void renderState::clearDepthBuffer()
-{
-	for(auto i = 0; i < width * height; ++i)
-	{
-		this->depthBuffer[i] = 0;
-	}
-}
+#include "definitions.h"
 
 int counter = 0;
 void renderer::setupMatrices()
 {
-	this->rs->viewportMatrix = matrix4::viewport(this->rs->width, this->rs->height, 0, 1);
-	this->rs->worldMatrix = matrix4::fromRotationY(counter/10.0f);
+	this->rs->viewportMatrix = matrix4::viewport(this->rs->width, this->rs->height, 0.0f, 1.0f);
+	this->rs->worldMatrix = matrix4::fromRotationY(counter/50.0f);
 	counter++;
 
 	//cout<<"counter:"<<counter<<endl;
 
 	this->rs->viewMatrix = matrix4::lookAt(
-		vector4(0, 2, 3.5, 1), // eye
+		vector4(0, 1.2, 2.5, 1), // eye
 		vector4(0, 0, 0, 1), // at
 		vector4(0, 1, 0, 0) // up
 		);
@@ -59,7 +42,7 @@ void renderer::drawLine(int x1, int x2, int y1, int y2, vector4 color, int radiu
 	{
 		for(auto i = x1; inRange(i, x1, x2, ux); i += ux)
 		{
-			drawPixel(y, i, 0.0f, static_cast<byte>(color.x), static_cast<byte>(color.y), static_cast<byte>(color.z), radius);
+			drawPixel(y, i, 0.0f, static_cast<BYTE>(color.x), static_cast<BYTE>(color.y), static_cast<BYTE>(color.z), radius);
 			eps += dy;
 
 			if(eps* 2 >= dx)
@@ -73,7 +56,7 @@ void renderer::drawLine(int x1, int x2, int y1, int y2, vector4 color, int radiu
 	{
 		for(auto i = y1; inRange(i, y1, y2, uy); i += uy)
 		{
-			drawPixel(i, x, 0.0f, static_cast<byte>(color.x), static_cast<byte>(color.y), static_cast<byte>(color.z), radius);
+			drawPixel(i, x, 0.0f, static_cast<BYTE>(color.x), static_cast<BYTE>(color.y), static_cast<BYTE>(color.z), radius);
 
 			eps += dx;
 			if(eps*2 >= dy)
@@ -86,55 +69,124 @@ void renderer::drawLine(int x1, int x2, int y1, int y2, vector4 color, int radiu
 
 }
 
-void renderer::drawSegment(vector<vector4>& v1, vector<vector4>& v2)
+void renderer::drawSegment(vector<vector4>& v1, vector<vector4>& v2, int radius)
 {
 	auto x1 = v1[0].x / v1[0].w;
-	x1 = (x1 + 1.0) / 2.0 * this->rs->width;
-	auto y1 = v1[0].y / v1[0].w;
-	y1 = (y1 + 1.0) / 2.0 * this->rs->height;
+	auto y1 = v1[0].y / v1[0].w;	
 	auto x2 = v2[0].x / v2[0].w;
-	x2 = (x2 + 1.0) / 2.0 * this->rs->width;
 	auto y2 = v2[0].y / v2[0].w;
-	y2 = (y2 + 1.0) / 2.0 * this->rs->height;
-
+	
 	this->drawLine(
 		int(x1 + 0.5f), 
 		int(x2 + 0.5f), 
 		int(y1 + 0.5f), 
 		int(y2 + 0.5f),
 		vector4(255,255,0,0),
-		1);
+		radius);
 }
 
-void renderer::drawPixel(int x, int y, float z, byte r, byte g, byte b, int radius)
+void renderer::drawPixel(int x, int y, float z, BYTE r, BYTE g, BYTE b, int radius)
 {
 	//TODO: Depth test
+	auto depthIndex =  x* this->rs->width + y;
+	auto currentDepth =this->rs->depthBuffer[depthIndex];
 
-	for(auto i = x - radius/2; i <= x + radius/2; i++)
+	if(z < currentDepth)
 	{
-		for(auto j = y - radius/2; j <= y + radius/2; j++)
+		this->rs->depthBuffer[depthIndex] = z;
+	
+		for(auto i = x - radius/2; i <= x + radius/2; i++)
 		{
-			if( i < 0 || i >= this->rs->height) continue;
-			if( j < 0 || j >= this->rs->width) continue;
+			for(auto j = y - radius/2; j <= y + radius/2; j++)
+			{
+				if( i < 0 || i >= this->rs->height) continue;
+				if( j < 0 || j >= this->rs->width) continue;
 
-			//cout<<"Draw pixel:"<<j<<" "<<i<<endl;
-			this->rs->frameBuffer[(i* this->rs->width + j)*3] = r;
-			this->rs->frameBuffer[(i* this->rs->width + j)*3+ 1] = g;
-			this->rs->frameBuffer[(i* this->rs->width + j)*3 + 2] = b;
+				//cout<<"Draw pixel:"<<j<<" "<<i<<endl;
+				this->rs->frameBuffer[(i* this->rs->width + j)*3] = r;
+				this->rs->frameBuffer[(i* this->rs->width + j)*3+ 1] = g;
+				this->rs->frameBuffer[(i* this->rs->width + j)*3 + 2] = b;
+			}
 		}
 	}
 
 }
 
-void renderer::drawTriangle(vector<vector4> v1, vector<vector4> v2, vector<vector4> v3)
+void renderer::drawTriangle(vector<vector4>& v1, vector<vector4>& v2, vector<vector4>& v3)
 {
+	// Homogenize coordinates
+	auto w1 = v1[0].w, w2 = v2[0].w, w3 = v3[0].w;
+
+	auto pos_1 = v1[0].scale(1.0f/w1);
+	auto pos_2 = v2[0].scale(1.0f/w2);
+	auto pos_3 = v3[0].scale(1.0f/w3);
+
+	auto minX = min(pos_1.x, min(pos_2.x, pos_3.x));
+	auto maxX = max(pos_1.x, max(pos_2.x, pos_3.x));
+	auto minY = min(pos_1.y, min(pos_2.y, pos_3.y));
+	auto maxY = max(pos_1.y, max(pos_2.y, pos_3.y));
+
+	auto varyingCount = v1.size();
+
+	auto f12 = [&pos_1, &pos_2](float x,float y){
+		return (pos_1.y - pos_2.y) * x
+			+ (pos_2.x - pos_1.x) * y
+			+ pos_1.x * pos_2.y - pos_2.x * pos_1.y;
+	};
+
+	auto f23 = [&pos_2, &pos_3](float x,float y){
+		return (pos_2.y - pos_3.y) * x
+			+ (pos_3.x - pos_2.x) * y
+			+ pos_2.x * pos_3.y - pos_3.x * pos_2.y;
+	};
+
+	auto f31 = [&pos_1,&pos_3](float x,float y){
+		float res = 0.0f;
+		auto a1 = (pos_3.y - pos_1.y) * x;
+		auto a2 = (pos_1.x - pos_3.x) * y;
+		auto a3 = pos_3.x * pos_1.y - pos_1.x * pos_3.y;
+
+		res = a1 + a2 + a3;
+		return a1 + a2 + a3;
+	};
+
+
+	auto startX = floorf(minX), startY = floorf(minY);
+	auto endX = ceilf(maxX), endY = ceilf(maxY);
+
+	for(auto i = startY; i <= endY; i++)
+	{
+		for (int j = startX; j <= endX; j++)
+		{
+			auto alpha = f23(j, i) / f23(pos_1.x, pos_1.y);
+			auto beta = f31(j, i) / f31(pos_2.x, pos_2.y);
+			auto gamma = f12(j, i) / f12(pos_3.x, pos_3.y);
+
+			if(alpha > 0 && beta > 0 && gamma > 0)
+			{
+				auto perspectCorrector = alpha / w1 + beta / w2 + gamma / w3;
+				vector<vector4> varyings;
+				for(auto k = 0; k < varyingCount; k++)
+				{
+					auto varying = v1[k].scale(alpha/w1).add(v2[k].scale(beta/w2).add(v3[k].scale(gamma/w3)));
+
+					varying = varying.scale(1.0f / perspectCorrector);
+
+					varyings.push_back(varying);
+				}
+				auto color = this->ps->processPixel(varyings, this->rs);
+
+				drawPixel(i, j, varyings[0].z / varyings[0].w, color.x, color.y, color.z);
+			}
+		}
+	}
 
 }
 
-void renderer::drawModel(int* const format, int formatNum, float* const vertices, int vertexNum)
+void renderer::drawModel(int* const format, int formatNum, float* const vertices, int vertexNum, int radius)
 {
-	bool renderWireframe = static_cast<bool>(this->rs->renderType && 0x1);
-	bool renderSolid = static_cast<bool>(this->rs->renderType>>1 && 0x1);
+	bool renderWireframe = static_cast<bool>(this->rs->renderType & 0x1);
+	bool renderSolid = static_cast<bool>(this->rs->renderType>>1 & 0x1);
 
 	int vertexSize = 0;
 	for(auto i = 0; i < formatNum; i++)
@@ -168,14 +220,14 @@ void renderer::drawModel(int* const format, int formatNum, float* const vertices
 			attributes.push_back(attribute);
 		}
 
-		processedVertexBuffer.push_back( this->rs->vs->processVertex(attributes, matrices)); 
+		processedVertexBuffer.push_back( this->vs->processVertex(attributes, this->rs)); 
 
 	}
 
 	auto triangleCount = vertexCount / 3;
 
 
-	// Render wire frame
+	// Draw wire frame
 	if(renderWireframe)
 	{
 		for(auto triangleIndex = 0; triangleIndex < triangleCount; triangleIndex++)
@@ -184,15 +236,22 @@ void renderer::drawModel(int* const format, int formatNum, float* const vertices
 			auto v2 = processedVertexBuffer[triangleIndex*3+1];
 			auto v3 = processedVertexBuffer[triangleIndex*3+2];
 
-			this->drawSegment(v1, v2);
-			this->drawSegment(v1, v3);
-			this->drawSegment(v2, v3);
+			this->drawSegment(v1, v2, radius);
+			this->drawSegment(v1, v3, radius);
+			this->drawSegment(v2, v3, radius);
 		}
 	}
 
-	// Render solid geometry
+	// Draw solid geometry
 	if(renderSolid)
 	{
+		for(auto triangleIndex = 0; triangleIndex < triangleCount; triangleIndex++)
+		{
+			auto v1 = processedVertexBuffer[triangleIndex*3];
+			auto v2 = processedVertexBuffer[triangleIndex*3+1];
+			auto v3 = processedVertexBuffer[triangleIndex*3+2];
 
+			this->drawTriangle(v1, v2, v3);
+		}
 	}
 }

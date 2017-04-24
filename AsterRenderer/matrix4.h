@@ -318,8 +318,7 @@ public:
 		result.set( nx / 2.0f, 0, 0, (nx - 1.0f) / 2.0f,
 			0, ny / 2.0f, 0, (ny - 1.0f) / 2.0f,
 			0, 0, (far - near) / 2.0f, (far + near) / 2.0f,
-			0, 0, 0, 1.0f
-			);
+			0, 0, 0, 1.0f);
 		return result;
 	}
 

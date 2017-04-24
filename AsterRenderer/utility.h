@@ -1,7 +1,5 @@
 #pragma once
 
-#include <assert.h>
-
 template <typename T>
 bool inRange(T& value, T lower, T upper, T increment)
 {
@@ -19,3 +17,5 @@ bool inRange(T& value, T lower, T upper, T increment)
 
 	return inRange;
 }
+
+
