@@ -9,12 +9,15 @@ void renderer::setupMatrices()
 {
 	this->rs->viewportMatrix = matrix4::viewport(this->rs->width, this->rs->height, 0.0f, 1.0f);
 	this->rs->worldMatrix = matrix4::fromRotationY(counter/50.0f);
-	counter++;
+	auto test=  matrix4::fromRotationX(counter/50.0f);
+	this->rs->worldMatrix = test.mul(this->rs->worldMatrix);
+	counter--;
+	
 
 	//cout<<"counter:"<<counter<<endl;
 
 	this->rs->viewMatrix = matrix4::lookAt(
-		vector4(0, 1.2, 2.5, 1), // eye
+		vector4(2.5, 1.2, 2.5, 1), // eye
 		vector4(0, 0, 0, 1), // at
 		vector4(0, 1, 0, 0) // up
 		);
@@ -197,6 +200,7 @@ void renderer::drawModel(int* const format, int formatNum, float* const vertices
 
 	// Create buffer for processed vertices
 	vector<vector<vector4>> processedVertexBuffer;
+	vector<vector<vector4>> unprocessedVertexBuffer;
 	vector<matrix4> matrices;
 	matrices.push_back(this->rs->worldMatrix.clone());
 	matrices.push_back(this->rs->viewMatrix.clone());
@@ -219,14 +223,39 @@ void renderer::drawModel(int* const format, int formatNum, float* const vertices
 			}
 			attributes.push_back(attribute);
 		}
-
-		processedVertexBuffer.push_back( this->vs->processVertex(attributes, this->rs)); 
-
+		
+		unprocessedVertexBuffer.push_back(attributes);
 	}
 
+	// Calculate normals for each triangle
 	auto triangleCount = vertexCount / 3;
+	for(auto i = 0; i < triangleCount; i ++)
+	{
+		auto v1 = unprocessedVertexBuffer[i*3][0];
+		auto v2 = unprocessedVertexBuffer[i*3 + 1][0];
+		auto v3 = unprocessedVertexBuffer[i*3 + 2][0];
+
+		auto p1 = v1.sub(v2);
+		p1.w = 0;
+		p1 = p1.normalize();
+
+		auto p2 = v1.sub(v3);
+		p2.w = 0;
+		p2 = p2.normalize();
+
+		auto normal = p1.cross(p2).normalize();
+		unprocessedVertexBuffer[i*3].push_back(normal);
+		unprocessedVertexBuffer[i*3+1].push_back(normal);
+		unprocessedVertexBuffer[i*3+2].push_back(normal);
+	}
+
+	for(auto attributes: unprocessedVertexBuffer)
+	{
+		processedVertexBuffer.push_back( this->vs->processVertex(attributes, this->rs)); 
+	}
 
 
+	auto viewDir = vector4(0,0,-1, 0);
 	// Draw wire frame
 	if(renderWireframe)
 	{
@@ -251,7 +280,12 @@ void renderer::drawModel(int* const format, int formatNum, float* const vertices
 			auto v2 = processedVertexBuffer[triangleIndex*3+1];
 			auto v3 = processedVertexBuffer[triangleIndex*3+2];
 
-			this->drawTriangle(v1, v2, v3);
+			auto normal = v1[3];
+
+			if(viewDir.dot(normal) >= 0)// ±³ÃæÌÞ³ý
+			{
+				this->drawTriangle(v1, v2, v3);
+			}
 		}
 	}
 }

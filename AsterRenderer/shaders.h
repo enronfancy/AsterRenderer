@@ -15,6 +15,7 @@ public:
 		auto pos = attributes[0];
 		auto color = attributes[1];
 		auto uv = attributes[2];
+		auto normal = attributes[3];
 
 		pos.w = 1;
 		pos = rs->worldMatrix.transform(pos); // world
@@ -22,9 +23,17 @@ public:
 		pos = rs->projectionMatrix.transform(pos); // projection
 		pos = rs->viewportMatrix.transform(pos); // viewport
 
+
+		normal = rs->worldMatrix.transform(normal); // world
+		normal = rs->viewMatrix.transform(normal); // view
+		normal = rs->projectionMatrix.transform(normal); // projection
+		normal.w = 0;
+		normal = normal.normalize();
+
 		varyings.push_back(pos);
 		varyings.push_back(color);
 		varyings.push_back(uv);
+		varyings.push_back(normal);
 
 		return varyings;
 	}

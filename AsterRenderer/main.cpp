@@ -7,7 +7,7 @@
 
 using namespace std;
 
-std::unique_ptr<renderer> p_renderer(new renderer());
+std::unique_ptr<renderer> p_renderer(new renderer(400, 400));
 unique_ptr<modelCube> p_triangle(new modelCube());
 
 void setPixels()
