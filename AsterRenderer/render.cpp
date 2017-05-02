@@ -28,7 +28,6 @@ void renderer::setupMatrices()
 		);
 }
 
-
 void renderer::drawLine(int x1, int x2, int y1, int y2, vector4 color, int radius)
 {
 	auto dx = x2 - x1;
@@ -254,8 +253,6 @@ void renderer::drawModel(int* const format, int formatNum, float* const vertices
 		processedVertexBuffer.push_back( this->vs->processVertex(attributes, this->rs)); 
 	}
 
-
-	auto viewDir = vector4(0,0,-1, 0);
 	// Draw wire frame
 	if(renderWireframe)
 	{
@@ -272,6 +269,7 @@ void renderer::drawModel(int* const format, int formatNum, float* const vertices
 	}
 
 	// Draw solid geometry
+	auto viewDir = vector4(0,0,-1, 0);
 	if(renderSolid)
 	{
 		for(auto triangleIndex = 0; triangleIndex < triangleCount; triangleIndex++)

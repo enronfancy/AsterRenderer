@@ -57,7 +57,17 @@ public:
 		auto b = tex->get_b(u,v);
 		auto g = tex->get_g(u,v);
 
-		finalPixel = (vector4(r,g,b,0));
+		finalPixel = vector4(r,g,b,1);
+
+		// Lighting
+		auto normal = varyings[3];
+		auto lightDirection = vector4(-1,-1, -1, 0);
+		lightDirection = lightDirection.normalize();
+
+		auto lighting = max(0.2f, normal.dot(lightDirection));
+
+		finalPixel = finalPixel.scale(lighting);
+
 		return finalPixel;
 	}
 
