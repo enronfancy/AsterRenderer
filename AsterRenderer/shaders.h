@@ -30,10 +30,13 @@ public:
 		normal.w = 0;
 		normal = normal.normalize();
 
+		auto worldNormal = rs->worldMatrix.transform(attributes[3]);
+
 		varyings.push_back(pos);
 		varyings.push_back(color);
 		varyings.push_back(uv);
 		varyings.push_back(normal);
+		varyings.push_back(worldNormal);
 
 		return varyings;
 	}
@@ -60,7 +63,8 @@ public:
 		finalPixel = vector4(r,g,b,1);
 
 		// Lighting
-		auto normal = varyings[3];
+		auto normal = varyings[4];
+		normal = normal.neg();
 		auto lightDirection = vector4(-1,-1, -1, 0);
 		lightDirection = lightDirection.normalize();
 
