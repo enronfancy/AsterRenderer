@@ -33,7 +33,7 @@ public:
 	void setupMatrices();
 
 	// Draw a model
-	void drawModel(int* const format, int formatNum, float* const vertices, int vertexNum, int radius = 1);
+	void drawModel(vector<int> format, int formatNum, vector<float> vertices, int vertexNum, int radius = 1);
 
 	// Draw a triangle with 3 vertices
 	void drawTriangle(vector<vector4>& v1, vector<vector4>& v2, vector<vector4>& v3);

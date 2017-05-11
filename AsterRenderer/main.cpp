@@ -4,11 +4,12 @@
 #include <ctime>
 #include "glut.h"
 #include "render.h"
+#include "modelLoader.h"
 
 using namespace std;
 
 std::unique_ptr<renderer> p_renderer(new renderer(400, 400));
-unique_ptr<modelCube> p_triangle(new modelCube());
+unique_ptr<customModel> p_triangle(new customModel());
 
 void setPixels()
 {
@@ -98,10 +99,10 @@ void r(int id)
 
 	auto matrices = clock() - start - clearBuffer;
 
-	p_renderer->drawModel(p_triangle->format.data(), 
+	p_renderer->drawModel(p_triangle->format, 
 		p_triangle->format.size(), 
-		p_triangle->vertices.data(),
-		p_triangle->vertices.size(),
+		p_triangle->vertices,
+		p_triangle->vertexNum,
 		1);
 
 	auto draw = clock() - start - clearBuffer - matrices;
@@ -133,14 +134,20 @@ int main(int argc, char *argv[])
 	//matrixTestCases();
 	//vectorTestCases();
 	
+	auto vertices = modelLoader::loadModel("teapot.obj", p_triangle->format);
+	
+	p_triangle->setVertices(vertices, vertices.size());
+
 	initGLEnv(argc, argv);
 	p_renderer->setupMatrices();
-	p_renderer->drawModel(p_triangle->format.data(), 
+	p_renderer->drawModel(p_triangle->format, 
 		p_triangle->format.size(), 
-		p_triangle->vertices.data(),
-		p_triangle->vertices.size(), 2);
+		p_triangle->vertices,
+		p_triangle->vertexNum, 2);
 	
 	glutDisplayFunc(setPixels);
 	glutTimerFunc(0, r, 1);
 	glutMainLoop();
+
+	return 0;
 }

@@ -51,6 +51,7 @@ public:
 	{
 		memset(this->frameBuffer.get(), 0, width*height*sizeof(BYTE)*3);
 	}
+	
 	void clearDepthBuffer()
 	{
 		for(auto i = 0; i < width * height; ++i)

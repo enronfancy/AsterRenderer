@@ -9,15 +9,18 @@ void renderer::setupMatrices()
 {
 	this->rs->viewportMatrix = matrix4::viewport(this->rs->width, this->rs->height, 0.0f, 1.0f);
 	this->rs->worldMatrix = matrix4::fromRotationY(counter/50.0f);
-	auto test=  matrix4::fromRotationX(counter/50.0f);
-	this->rs->worldMatrix = test.mul(this->rs->worldMatrix);
-	counter--;
+	//auto test=  matrix4::fromRotationX(counter/50.0f);
+	//this->rs->worldMatrix = test.mul(this->rs->worldMatrix);
+
+	auto scaleMatrix = matrix4::identity().scale(2.0);
+	//this->rs->worldMatrix  = scaleMatrix.mul(this->rs->worldMatrix);
+	counter++;
 	
 
 	//cout<<"counter:"<<counter<<endl;
 
 	this->rs->viewMatrix = matrix4::lookAt(
-		vector4(2.5, 1.2, 2.5, 1), // eye
+		vector4(2.5, 1.5, 0.5, 1), // eye
 		vector4(0, 0, 0, 1), // at
 		vector4(0, 1, 0, 0) // up
 		);
@@ -156,7 +159,15 @@ void renderer::drawTriangle(vector<vector4>& v1, vector<vector4>& v2, vector<vec
 	auto startX = floorf(minX), startY = floorf(minY);
 	auto endX = ceilf(maxX), endY = ceilf(maxY);
 
-	for(auto i = startY; i <= endY; i++)
+	// deal with out-of-window pixel
+	startX = max(0.0f, startX);
+	startY = max(0.0f, startY);
+
+	endX = min(float(this->rs->width), endX);
+	endY = min(float(this->rs->height), endY);
+
+
+	for(int i = startY; i <= endY; i++)
 	{
 		for (int j = startX; j <= endX; j++)
 		{
@@ -185,7 +196,7 @@ void renderer::drawTriangle(vector<vector4>& v1, vector<vector4>& v2, vector<vec
 
 }
 
-void renderer::drawModel(int* const format, int formatNum, float* const vertices, int vertexNum, int radius)
+void renderer::drawModel(vector<int> format, int formatNum, vector<float> vertices, int vertexNum, int radius)
 {
 	bool renderWireframe = static_cast<bool>(this->rs->renderType & 0x1);
 	bool renderSolid = static_cast<bool>(this->rs->renderType>>1 & 0x1);
@@ -226,27 +237,33 @@ void renderer::drawModel(int* const format, int formatNum, float* const vertices
 		unprocessedVertexBuffer.push_back(attributes);
 	}
 
-	// Calculate normals for each triangle
+	
 	auto triangleCount = vertexCount / 3;
-	for(auto i = 0; i < triangleCount; i ++)
+	
+	// Calculate normals for each triangle if there is no normal
+	if(vertexSize <= 8)
 	{
-		auto v1 = unprocessedVertexBuffer[i*3][0];
-		auto v2 = unprocessedVertexBuffer[i*3 + 1][0];
-		auto v3 = unprocessedVertexBuffer[i*3 + 2][0];
+		for(auto i = 0; i < triangleCount; i ++)
+		{
+			auto v1 = unprocessedVertexBuffer[i*3][0];
+			auto v2 = unprocessedVertexBuffer[i*3 + 1][0];
+			auto v3 = unprocessedVertexBuffer[i*3 + 2][0];
 
-		auto p1 = v1.sub(v2);
-		p1.w = 0;
-		p1 = p1.normalize();
+			auto p1 = v1.sub(v2);
+			p1.w = 0;
+			p1 = p1.normalize();
 
-		auto p2 = v1.sub(v3);
-		p2.w = 0;
-		p2 = p2.normalize();
+			auto p2 = v1.sub(v3);
+			p2.w = 0;
+			p2 = p2.normalize();
 
-		auto normal = p1.cross(p2).normalize();
-		unprocessedVertexBuffer[i*3].push_back(normal);
-		unprocessedVertexBuffer[i*3+1].push_back(normal);
-		unprocessedVertexBuffer[i*3+2].push_back(normal);
+			auto normal = p1.cross(p2).normalize();
+			unprocessedVertexBuffer[i*3].push_back(normal);
+			unprocessedVertexBuffer[i*3+1].push_back(normal);
+			unprocessedVertexBuffer[i*3+2].push_back(normal);
+		}
 	}
+	
 
 	for(auto attributes: unprocessedVertexBuffer)
 	{
@@ -280,7 +297,7 @@ void renderer::drawModel(int* const format, int formatNum, float* const vertices
 
 			auto normal = v1[3];
 
-			if(viewDir.dot(normal) >= 0)// ±³ÃæÌÞ³ý
+			if(viewDir.dot(normal) >= 0) // ±³ÃæÌÞ³ý
 			{
 				this->drawTriangle(v1, v2, v3);
 			}
